@@ -23,7 +23,19 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 
 	public void OnPreprocessBuild(UnityEditor.BuildTarget target, string path) {
 		Debug.Log("ビルドするよ！");
-
+		//体験版なら
+		if (isTrial) {
+			//削除リストが空でないなら
+			if (deleteList.Length > 0) {
+				//順番に中身のパスを取得し削除していく
+				for (int i = 0; i < deleteList.Length; i++) {
+					//パスワード取得
+					string l_path = AssetDatabase.GetAssetPath(deleteList[i]);
+					//パスを使って削除
+					AssetDatabase.DeleteAsset(l_path);
+				}
+			}
+		}
 	}
 
 	// ビルド後処理
@@ -32,19 +44,7 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 	}
 
 	private void Awake() {
-		//体験版なら
-		if (isTrial) {
-			//削除リストが空でないなら
-			if (deleteList.Length > 0) {
-				//順番に中身のパスを取得し削除していく
-				for (int i = 0; i < deleteList.Length; i++) {
-					//パスワード取得
-					string path = AssetDatabase.GetAssetPath(deleteList[i]);
-					//パスを使って削除
-					AssetDatabase.DeleteAsset(path);
-				}
-			}
-		}
+
 		if (myInstance == null) {
 			DontDestroyOnLoad(this.gameObject);
 			myInstance = this.gameObject;
