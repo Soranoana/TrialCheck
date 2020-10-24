@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Callbacks;
+//using UnityEditor.Build;
+//using UnityEditor.Callbacks;
 using UnityEngine.SceneManagement;
 
 public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBuildWithReport, IProcessSceneWithReport*/ {
@@ -11,8 +11,10 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 	[Tooltip("体験版ならtrue\n正規版ならfalse")]
 	public bool isTrial;    //体験版判定
 
-	private Component master;   //体験版アクティブ判定用スクリプト
-	public MonoScript[] deleteList;  //ビルド時に削除するスクリプト 
+	//private Component master;   //体験版アクティブ判定用スクリプト
+	public Object[] deleteList;  //ビルド時に削除するスクリプト 
+	private string[] deleteObjectPath;  //削除されるオブジェクトのパス
+	private string[] tmpObjectPath; //削除されるオブジェクトの退避先
 	private static GameObject myInstance;   //DontDestroyOnload後に別シーンから呼び出される用
 
 	public static GameObject Instance {
@@ -21,7 +23,9 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 		}
 	}
 
-	public void OnPreprocessBuild(UnityEditor.BuildTarget target, string path) {
+	public void OnPreprocessBuild(/*UnityEditor.BuildTarget target, string path*/) {
+		deleteObjectPath = new string[deleteList.Length];
+		tmpObjectPath = new string[deleteList.Length];
 		Debug.Log("ビルドするよ！");
 		//体験版なら
 		if (isTrial) {
@@ -29,18 +33,38 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 			if (deleteList.Length > 0) {
 				//順番に中身のパスを取得し削除していく
 				for (int i = 0; i < deleteList.Length; i++) {
-					//パスワード取得
-					string l_path = AssetDatabase.GetAssetPath(deleteList[i]);
+					//拡張子を取得
+					string fileExtension = System.IO.Path.GetExtension(AssetDatabase.GetAssetPath(deleteList[i]));
+					//パスを取得
+					//string l_path = AssetDatabase.GetAssetPath(deleteList[i]);
+					//元のパスを取得
+					deleteObjectPath[i] = AssetDatabase.GetAssetPath(deleteList[i]) + fileExtension;
+					//退避先のパスを取得
+					tmpObjectPath[i] = "StreamingAssetsTemp/" + deleteList[i].name + fileExtension;
+
 					//パスを使って削除
-					AssetDatabase.DeleteAsset(l_path);
+					//AssetDatabase.DeleteAsset(l_path);
+					//パスを使って退避
+					System.IO.Directory.Move(deleteObjectPath[i], tmpObjectPath[i]);
 				}
 			}
 		}
 	}
 
 	// ビルド後処理
-	public void OnPostprocessBuild(BuildTarget target, string path) {
+	public void OnPostprocessBuild(/*BuildTarget target, string path*/) {
 		Debug.Log("ビルドしたよ！");
+		//退避先から元の場所に戻す
+		//体験版なら
+		if (isTrial) {
+			//削除リストが空でないなら
+			if (deleteList.Length > 0) {
+				//順番に中身のパスを取得し戻していく
+				for (int i = 0; i < deleteList.Length; i++) {
+					System.IO.Directory.Move(tmpObjectPath[i], deleteObjectPath[i]);
+				}
+			}
+		}
 	}
 
 	private void Awake() {
