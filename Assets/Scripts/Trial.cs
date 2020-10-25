@@ -6,10 +6,13 @@ using UnityEditor;
 //using UnityEditor.Callbacks;
 using UnityEngine.SceneManagement;
 
-public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBuildWithReport, IProcessSceneWithReport*/ {
+public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBuildWithReport, IProcessSceneWithReport*/
+{
 
 	[Tooltip("体験版ならtrue\n正規版ならfalse")]
 	public bool isTrial;    //体験版判定
+
+	private static bool? isTrialStatic = null;  //一度でも検索したら覚えとく用
 
 	//private Component master;   //体験版アクティブ判定用スクリプト
 	public Object[] deleteList;  //ビルド時に削除するスクリプト 
@@ -86,21 +89,40 @@ public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBu
 	}
 
 	public bool IsTrial() {
-		//取得に失敗するか、取得しても中身が空なら体験版
-		try {
-			Master master = GetComponent<Master>();
-			if (master != null) {
-				Debug.Log("Product version");
-				return false;
-			} else {
-				Debug.Log("Trial version");
-				return true;
+		//保存してなかったら確認
+		if (isTrialStatic == null) {
+			//すべてのコンポーネントを取得
+			MonoBehaviour[] monoBehaviours = GetComponents<MonoBehaviour>();
+			//その中にMasterという名前があったらfalse
+			foreach (var monoBehaviour in monoBehaviours) {
+				if (monoBehaviour.GetType().Name == "Master") {
+					isTrialStatic = false;
+					return false;
+				}
 			}
-		} catch (UnityException) {
-			Debug.Log("Trial version");
+			//なかったらtrue
+			isTrialStatic = true;
 			return true;
+		} else {
+			//保存していたらそれを返す
+			return (bool)isTrialStatic;
 		}
+
+		/*
+				//取得に失敗するか、取得しても中身が空なら体験版
+				try {
+					Master master = GetComponent<Master>();
+					if (master != null) {
+						Debug.Log("Product version");
+						return false;
+					} else {
+						Debug.Log("Trial version");
+						return true;
+					}
+				} catch (UnityException) {
+					Debug.Log("Trial version");
+					return true;
+				}*/
 	}
 
-	//public void
 }
