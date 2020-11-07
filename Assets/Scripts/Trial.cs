@@ -6,8 +6,7 @@ using UnityEditor;
 //using UnityEditor.Callbacks;
 using UnityEngine.SceneManagement;
 
-public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBuildWithReport, IProcessSceneWithReport*/
-{
+public class Trial : MonoBehaviour/*, IPreprocessBuildWithReport, IPostprocessBuildWithReport, IProcessSceneWithReport*/{
 
 	[Tooltip("体験版ならtrue\n正規版ならfalse")]
 	public bool isTrial;    //体験版判定
